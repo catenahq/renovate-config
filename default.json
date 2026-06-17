@@ -1,0 +1,34 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Catena org-wide Renovate policy. Extend it from any catenahq repo with: extends: github>catenahq/renovate-config. It layers Catena operational config (PR limits, timezone, labels, lockfile cadence, low-risk automerge groups) on top of the generic security baseline github>catenahq/scanctl:secure-base, which owns the 7-day adoption cooldown, GitHub Actions SHA-pinning, and CVE fast-track. Public on purpose: it carries no secrets, so every consumer (public repos included) resolves it cleanly and the policy stays transparent. The self-hosted runner lives separately in the private catenahq/renovate repo.",
+    "No top-level schedule: timing is controlled solely by the single self-hosted Renovate cron (catenahq/renovate, every 4 hours). A Renovate-internal schedule (e.g. before 5am) silently no-ops every run that lands outside the window -- a delayed scheduled run OR any manual workflow_dispatch -- so the same invocation behaves differently by wall clock. Dropping it makes every run, scheduled or manual, do identical work. The 7-day minimumReleaseAge cooldown from secure-base still throttles churn; lockFileMaintenance keeps its own weekly cadence below."
+  ],
+  "extends": [
+    "github>catenahq/scanctl:secure-base",
+    ":semanticCommits",
+    ":timezone(America/Toronto)"
+  ],
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 4,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["on monday"]
+  },
+  "packageRules": [
+    {
+      "description": "Low-risk GitHub Actions version bumps: group + automerge after the cooldown.",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "github-actions",
+      "automerge": true
+    },
+    {
+      "description": "Container image / compose bumps: group, review manually.",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "groupName": "docker",
+      "automerge": false
+    }
+  ]
+}
