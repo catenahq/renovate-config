@@ -29,6 +29,12 @@
       "matchManagers": ["dockerfile", "docker-compose"],
       "groupName": "docker",
       "automerge": false
+    },
+    {
+      "description": "First-party actions/reusable workflows ride their branch ref (e.g. catenahq/scanctl github-reusable.yml@main): do NOT pin them to a SHA. secure-base SHA-pins third-party actions because their tags are mutable supply-chain surface, but our own repos are trusted, ruleset-gated, and the zizmor policy explicitly allows catenahq/* ref-pins. Pinning them froze every caller at a stale SHA (secure-base disables same-tag digest updates), which forced a manual per-repo bump on every scanctl change.",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["catenahq/**"],
+      "pinDigests": false
     }
   ]
 }
