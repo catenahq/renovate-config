@@ -2,7 +2,8 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": [
     "Catena org-wide Renovate policy. Extend it from any catenahq repo with: extends: github>catenahq/renovate-config. It layers Catena operational config (PR limits, timezone, labels, lockfile cadence, low-risk automerge groups) on top of the generic security baseline github>catenahq/scanctl:secure-base, which owns the 7-day adoption cooldown, GitHub Actions SHA-pinning, and CVE fast-track. Public on purpose: it carries no secrets, so every consumer (public repos included) resolves it cleanly and the policy stays transparent. The self-hosted runner lives separately in the private catenahq/renovate repo.",
-    "No top-level schedule: timing is controlled solely by the single self-hosted Renovate cron (catenahq/renovate, every 4 hours). A Renovate-internal schedule (e.g. before 5am) silently no-ops every run that lands outside the window -- a delayed scheduled run OR any manual workflow_dispatch -- so the same invocation behaves differently by wall clock. Dropping it makes every run, scheduled or manual, do identical work. The 7-day minimumReleaseAge cooldown from secure-base still throttles churn; lockFileMaintenance keeps its own weekly cadence below."
+    "No top-level schedule: timing is controlled solely by the single self-hosted Renovate cron (catenahq/renovate, every 4 hours). A Renovate-internal schedule (e.g. before 5am) silently no-ops every run that lands outside the window -- a delayed scheduled run OR any manual workflow_dispatch -- so the same invocation behaves differently by wall clock. Dropping it makes every run, scheduled or manual, do identical work. The 7-day minimumReleaseAge cooldown from secure-base still throttles churn; lockFileMaintenance keeps its own weekly cadence below.",
+    "lockFileMaintenance automerges. secure-base exempts it from the cooldown because a relock bundles many packages and so carries no single release timestamp to age -- timestamp-required + strict held it pending forever. That exemption made the PR OPEN again but nothing merged it, so the weekly relock still stalled, just one step later. Merging it is the point: a relock re-resolves every dependency inside its existing declared range, which is how most transitive-only CVE fixes reach the lockfile without a direct-dependency bump, and a stalled relock silently withholds exactly those. Safe to automerge because it changes no declared range and the branch ruleset's required checks -- including the scanctl diff gate, which fails on any CVE the PR INTRODUCES -- still have to pass first."
   ],
   "extends": [
     "github>catenahq/scanctl:secure-base",
@@ -14,7 +15,8 @@
   "prHourlyLimit": 4,
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["on monday"]
+    "schedule": ["on monday"],
+    "automerge": true
   },
   "packageRules": [
     {
