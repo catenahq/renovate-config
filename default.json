@@ -2,9 +2,10 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "description": [
     "Catena org-wide Renovate policy. Extend it from any catenahq repo with: extends: github>catenahq/renovate-config. It layers Catena operational config (PR limits, timezone, labels, lockfile cadence, low-risk automerge groups) on top of the generic security baseline github>catenahq/scanctl:secure-base, which owns the 7-day adoption cooldown, GitHub Actions SHA-pinning, and CVE fast-track. Public on purpose: it carries no secrets, so every consumer (public repos included) resolves it cleanly and the policy stays transparent. The self-hosted runner lives separately in the private catenahq/renovate repo.",
-    "No top-level schedule: timing is controlled solely by the single self-hosted Renovate cron (catenahq/renovate, every 4 hours). A Renovate-internal schedule (e.g. before 5am) silently no-ops every run that lands outside the window -- a delayed scheduled run OR any manual workflow_dispatch -- so the same invocation behaves differently by wall clock. Dropping it makes every run, scheduled or manual, do identical work. The 7-day minimumReleaseAge cooldown from secure-base still throttles churn; lockFileMaintenance keeps its own weekly cadence below.",
+    "No top-level schedule: timing is controlled solely by the single self-hosted Renovate cron (catenahq/renovate, every 4 hours). A Renovate-internal schedule (e.g. before 5am) silently no-ops every run that lands outside the window -- a delayed scheduled run OR any manual workflow_dispatch -- so the same invocation behaves differently by wall clock. Without one, every run, scheduled or manual, does identical work. The 7-day minimumReleaseAge cooldown from secure-base still throttles churn; lockFileMaintenance keeps its own weekly cadence below.",
+    "platformAutomerge is off: Renovate merges an automerge PR itself, on a run after the one that opened it, and only once every check on the PR has passed. GitHub's native auto-merge waits only for the checks a branch ruleset requires, so in a repo without one it merges the PR before CI reports. Renovate counts its own aged-release check as passing (secure-base internalChecksAsSuccess), so the gate is each repo's CI running on pull_request: a repo whose PRs get no CI check would automerge unchecked.",
     "A `# renovate: datasource=... depName=...` comment above a `*_VERSION` line is tracked in workflow and action files (customManagers:githubActionsVersions) and in Dockerfiles as an ARG or ENV (customManagers:dockerfileVersions), so a tool pinned in a run: block or a build stage is bumped like any other dependency.",
-    "lockFileMaintenance automerges. secure-base exempts it from the cooldown because a relock bundles many packages and so carries no single release timestamp to age -- timestamp-required + strict held it pending forever. That exemption made the PR OPEN again but nothing merged it, so the weekly relock still stalled, just one step later. Merging it is the point: a relock re-resolves every dependency inside its existing declared range, which is how most transitive-only CVE fixes reach the lockfile without a direct-dependency bump, and a stalled relock silently withholds exactly those. Safe to automerge because it changes no declared range and the branch ruleset's required checks -- including the scanctl diff gate, which fails on any CVE the PR INTRODUCES -- still have to pass first."
+    "lockFileMaintenance automerges (secure-base exempts it from the cooldown). A relock re-resolves every dependency inside its existing declared range, which is how most transitive-only CVE fixes reach the lockfile without a direct-dependency bump, so an unmerged relock withholds exactly those. Automerging it is safe because it changes no declared range and every check on the PR -- including the scanctl diff gate, which fails on any CVE the PR INTRODUCES -- has to pass first."
   ],
   "extends": [
     "github>catenahq/scanctl:secure-base",
@@ -16,6 +17,7 @@
   "labels": ["dependencies"],
   "prConcurrentLimit": 10,
   "prHourlyLimit": 4,
+  "platformAutomerge": false,
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["on monday"],
@@ -36,7 +38,7 @@
       "automerge": false
     },
     {
-      "description": "First-party actions/reusable workflows ride their branch ref (e.g. catenahq/scanctl github-reusable.yml@main): do NOT pin them to a SHA. secure-base SHA-pins third-party actions because their tags are mutable supply-chain surface, but our own repos are trusted, ruleset-gated, and the zizmor policy explicitly allows catenahq/* ref-pins. Pinning them froze every caller at a stale SHA (secure-base disables same-tag digest updates), which forced a manual per-repo bump on every scanctl change.",
+      "description": "First-party actions/reusable workflows ride their branch ref (e.g. catenahq/scanctl github-reusable.yml@main): do NOT pin them to a SHA. secure-base SHA-pins third-party actions because their tags are mutable supply-chain surface, but our own repos are trusted, ruleset-gated, and the zizmor policy explicitly allows catenahq/* ref-pins. Pinning them would freeze every caller at a stale SHA (secure-base disables same-tag digest updates) and force a manual per-repo bump on every scanctl change.",
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["catenahq/**"],
       "pinDigests": false
