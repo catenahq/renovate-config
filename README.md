@@ -18,6 +18,11 @@ resolve it cleanly and the policy stays transparent. The self-hosted Renovate
 self-consumes this preset; run timing (every 4 hours) is owned by that runner's
 cron.
 
+CI runs Renovate's own `renovate-config-validator --strict` (pinned renovate
+version, bumped by Renovate itself) on every preset file in the repo, currently
+`default.json`. It fails on unknown options, mistyped values and invalid
+`packageRules`. A new preset file must be added to that step's file list.
+
 Resolution chain:
 
 ```

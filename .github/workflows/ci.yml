@@ -30,3 +30,19 @@ jobs:
       - name: Repo rules (no tracked env file; .gitignore carries the env rule)
         working-directory: ./renovate-config
         run: node ../contracts/scripts/check-repo-rules.mjs
+
+  validate-presets:
+    name: Validate presets
+    runs-on: ubuntu-latest
+    env:
+      # renovate: datasource=npm depName=renovate
+      RENOVATE_VERSION: 44.115.9
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "24"
+      - name: Validate every preset with renovate-config-validator --strict
+        run: npx --yes -p "renovate@${RENOVATE_VERSION}" renovate-config-validator --strict default.json
