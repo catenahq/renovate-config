@@ -8,7 +8,7 @@ from any repo's `renovate.json`:
 ```
 
 It layers Catena operational config (PR concurrency / hourly limits, timezone,
-labels, weekly lockfile maintenance, low-risk automerge groups) on top of the
+labels, daily lockfile maintenance, low-risk automerge groups) on top of the
 generic security baseline `github>catenahq/scanctl:secure-base` (7-day adoption
 cooldown, GitHub Actions SHA-pinning, CVE fast-track).
 
