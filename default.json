@@ -7,8 +7,12 @@
     "platformAutomerge is off: Renovate merges an automerge PR itself, on a run after the one that opened it, and only once every check on the PR has passed. GitHub's native auto-merge waits only for the checks a branch ruleset requires, so in a repo without one it merges the PR before CI reports. Renovate counts its own aged-release check as passing (secure-base internalChecksAsSuccess), so the gate is each repo's CI running on pull_request: a repo whose PRs get no CI check would automerge unchecked.",
     "A `# renovate: datasource=... depName=...` comment above a `*_VERSION` line is tracked in workflow and action files (customManagers:githubActionsVersions) and in Dockerfiles as an ARG or ENV (customManagers:dockerfileVersions), so a tool pinned in a run: block or a build stage is bumped like any other dependency.",
     "lockFileMaintenance is exempt from the cooldown (secure-base). A relock re-resolves every dependency inside its existing declared range, which is how most transitive-only CVE fixes reach the lockfile without a direct-dependency bump, so an unmerged relock withholds exactly those. It automerges safely because it changes no declared range and every check on the PR -- including the scanctl diff gate, which fails on any CVE the PR INTRODUCES -- has to pass first.",
-    "lockFileMaintenance runs daily, in the window 00:00-03:59 America/Toronto, which one 4-hourly run lands in each day. For a transitive-only fix the relock is the only path: Renovate's vulnerability PRs refuse a change to package-lock.json alone unless lockfileVersion is 1. A run outside the window does no relock; the Dependency Dashboard checkbox starts one at once."
+    "lockFileMaintenance runs daily, in the window 00:00-03:59 America/Toronto, which one 4-hourly run lands in each day. For a transitive-only fix the relock is the only path: Renovate's vulnerability PRs refuse a change to package-lock.json alone unless lockfileVersion is 1. A run outside the window does no relock; the Dependency Dashboard checkbox starts one at once.",
+    "Renovate writes npm lock files with npm 11 (constraints.npm, read before any version a repo's package.json names). npm 12 refuses the registry tarball of any package with bundleDependencies when it writes a lock file (npm/cli#9800, open), which fails the artifact update of every pull request in a repo whose lock holds one, such as @tailwindcss/oxide-wasm32-wasi."
   ],
+  "constraints": {
+    "npm": "<12"
+  },
   "extends": [
     "github>catenahq/scanctl:secure-base",
     ":semanticCommits",
