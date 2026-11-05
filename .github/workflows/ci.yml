@@ -20,8 +20,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  same-tree:
+    # Reuses the result of an earlier run on the same tree; every job below
+    # needs it.
+    name: same tree (ci)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      run: ${{ steps.tree.outputs.run }}
+    steps:
+      - id: tree
+        uses: catenahq/contracts/.github/actions/same-tree@main
+        with:
+          siblings: catenahq/contracts
+
   repo-rules:
     name: Repo rules
+    needs: same-tree
+    if: needs.same-tree.outputs.run != 'false'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
@@ -39,6 +57,8 @@ jobs:
 
   validate-presets:
     name: Validate presets
+    needs: same-tree
+    if: needs.same-tree.outputs.run != 'false'
     runs-on: ubuntu-latest
     env:
       # renovate: datasource=npm depName=renovate
