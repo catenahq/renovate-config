@@ -5,6 +5,7 @@
     "No top-level schedule: timing is controlled solely by the single self-hosted Renovate cron (catenahq/renovate, every 4 hours). A Renovate-internal schedule (e.g. before 5am) silently no-ops every run that lands outside the window -- a delayed scheduled run OR any manual workflow_dispatch -- so the same invocation behaves differently by wall clock. Without one, every run, scheduled or manual, does identical work. The 7-day minimumReleaseAge cooldown from secure-base still throttles churn; lockFileMaintenance keeps its own daily window below.",
     "Every update automerges once all its checks pass: CI on the pull request is the gate, and the release bench, the app tests or the deploy that follow the merge carry the proof that it works. No rule here holds a PR for a human.",
     "platformAutomerge is off: Renovate merges an automerge PR itself, once every check it sees on the branch has passed. GitHub's native auto-merge waits only for the checks a branch ruleset requires. Renovate counts its own aged-release check as passing (secure-base internalChecksAsSuccess), so a repo without a ruleset can see a branch green before its CI has even started, and merge it: such a repo runs its CI on pushes to renovate/** and sets internalChecksAsSuccess to false. The default branch of catena-admin requires the checks of the renovate-automerge-gate ruleset before a bot pull request merges; the admin bypasses it.",
+    "The sibling pins in .github/catenahq.lock (lines of the form catenahq/<repo> <40-hex sha> # <branch>) move through pull requests: Renovate moves each pin to the new head of its branch, one pull request per source repository. A commit has no release timestamp, so these pins skip the adoption cooldown. marcusquinn/aidevops digest updates are on for the same reason.",
     "A `# renovate: datasource=... depName=...` comment above a `*_VERSION` line is tracked in workflow and action files (customManagers:githubActionsVersions) and in Dockerfiles as an ARG or ENV (customManagers:dockerfileVersions), so a tool pinned in a run: block or a build stage is bumped like any other dependency.",
     "lockFileMaintenance is exempt from the cooldown (secure-base). A relock re-resolves every dependency inside its existing declared range, which is how most transitive-only CVE fixes reach the lockfile without a direct-dependency bump, so an unmerged relock withholds exactly those. It automerges safely because it changes no declared range and every check on the PR -- including the scanctl diff gate, which fails on any CVE the PR INTRODUCES -- has to pass first.",
     "lockFileMaintenance runs daily, in the window 00:00-03:59 America/Toronto, which one 4-hourly run lands in each day. For a transitive-only fix the relock is the only path: Renovate's vulnerability PRs refuse a change to package-lock.json alone unless lockfileVersion is 1. A run outside the window does no relock; the Dependency Dashboard checkbox starts one at once.",
@@ -46,6 +47,33 @@
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["catenahq/**"],
       "pinDigests": false
+    },
+    {
+      "description": "The sibling pins in .github/catenahq.lock follow the head of their branch, with no release-age wait. One group per source repository.",
+      "matchManagers": ["custom.regex"],
+      "matchDepNames": ["catenahq/**"],
+      "enabled": true,
+      "minimumReleaseAge": null,
+      "groupName": "{{{depName}}}"
+    },
+    {
+      "description": "Digest updates of the SHA-pinned marcusquinn/aidevops reusable workflow.",
+      "matchManagers": ["github-actions"],
+      "matchDepNames": ["marcusquinn/aidevops"],
+      "matchUpdateTypes": ["digest"],
+      "enabled": true
+    }
+  ],
+  "customManagers": [
+    {
+      "description": "Sibling pins in .github/catenahq.lock, one per line: catenahq/<repo> <40-hex sha> # <branch>.",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)\\.github/catenahq\\.lock$/"],
+      "matchStrings": [
+        "(?<depName>catenahq/[A-Za-z0-9_.-]+) (?<currentDigest>[0-9a-f]{40}) # (?<currentValue>\\S+)"
+      ],
+      "datasourceTemplate": "git-refs",
+      "packageNameTemplate": "https://github.com/{{{depName}}}"
     }
   ]
 }
