@@ -12,11 +12,9 @@ labels, daily lockfile maintenance, low-risk automerge groups) on top of the
 generic security baseline `github>catenahq/scanctl:secure-base` (7-day adoption
 cooldown, GitHub Actions SHA-pinning, CVE fast-track).
 
-Automerge pull requests are handed to GitHub's native auto-merge. First-party
-pins move through pull requests: `catenahq/**` `uses:` references and the sibling
-pins in `.github/catenahq.lock` (lines `catenahq/<repo> <40-hex sha> # <branch>`)
-are pinned to a commit SHA, with no release-age wait and one group per source
-repository. Digest updates of `marcusquinn/aidevops` are on.
+The sibling pins in `.github/catenahq.lock` (lines `catenahq/<repo> <40-hex sha> #
+<branch>`) move through pull requests, with no release-age wait and one group per
+source repository. Digest updates of `marcusquinn/aidevops` are on.
 
 Public on purpose: it carries no secrets, so public and private consumers alike
 resolve it cleanly and the policy stays transparent. The self-hosted Renovate
