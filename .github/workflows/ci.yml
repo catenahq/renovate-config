@@ -51,6 +51,7 @@ jobs:
         with:
           repository: catenahq/contracts
           path: contracts
+        lock: renovate-config/.github/catenahq.lock
       - name: Repo rules (no tracked env file; .gitignore carries the env rule)
         working-directory: ./renovate-config
         run: node ../contracts/scripts/check-repo-rules.mjs
