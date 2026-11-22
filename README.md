@@ -14,7 +14,13 @@ cooldown, GitHub Actions SHA-pinning, CVE fast-track).
 
 The sibling pins in `.github/catenahq.lock` (lines `catenahq/<repo> <40-hex sha> #
 <branch>`) move through pull requests, with no release-age wait and one group per
-source repository. Digest updates of `marcusquinn/aidevops` are on.
+source repository. The first-party `uses:` refs of `catenahq/**` (`@<sha> # <branch>`) move
+the same way, all together in one pull request per consuming repository.
+Digest updates of `marcusquinn/aidevops` are on.
+
+`platformAutomerge` is on: Renovate enables GitHub auto-merge on its pull requests and the
+`ci / gate` branch ruleset of the repository decides when the merge happens, so a repository
+needs that ruleset before it extends this preset.
 
 In `ci/run`, a `# renovate: datasource=... depName=...` comment above a `*_VERSION=` line, or
 above an `*_IMAGE=<image>:<tag>@sha256:<digest>` line (datasource `docker`), is tracked too.
