@@ -1,0 +1,5 @@
+gates: {}
+checks:
+  presets:
+    tools:
+      node: 24.22.3

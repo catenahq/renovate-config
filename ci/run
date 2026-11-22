@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Runs one check of this repository by its name in .github/checks.yml, the same
+# in CI and on a workstation: bash ci/run <name>.
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+# renovate: datasource=npm depName=renovate
+RENOVATE_VERSION=44.115.9
+
+case "${1:-}" in
+  presets)
+    # Every preset file of the repository, strictly: unknown options, mistyped
+    # values and invalid packageRules fail.
+    npx --yes -p "renovate@${RENOVATE_VERSION}" renovate-config-validator --strict default.json
+    ;;
+  *)
+    echo "ci/run: unknown check '${1:-}' (checks: presets)" >&2
+    exit 2
+    ;;
+esac
