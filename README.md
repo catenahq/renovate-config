@@ -14,7 +14,12 @@ cooldown, GitHub Actions SHA-pinning, CVE fast-track).
 
 The sibling pins in `.github/catenahq.lock` (lines `catenahq/<repo> <40-hex sha> #
 <branch>`) move through pull requests, with no release-age wait and one group per
-source repository. Digest updates of `marcusquinn/aidevops` are on.
+source repository. The first-party `uses:` refs of `catenahq/**` (`@<sha> # <branch>`) move
+the same way, all together in one pull request per consuming repository.
+Digest updates of `marcusquinn/aidevops` are on.
+
+In `ci/run`, a `# renovate: datasource=... depName=...` comment above a `*_VERSION=` line, or
+above an `*_IMAGE=<image>:<tag>@sha256:<digest>` line (datasource `docker`), is tracked too.
 
 Public on purpose: it carries no secrets, so public and private consumers alike
 resolve it cleanly and the policy stays transparent. The self-hosted Renovate
