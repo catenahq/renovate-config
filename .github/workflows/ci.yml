@@ -1,75 +1,23 @@
-name: CI
-
-# Rules every catena repo keeps. The check lives in catenahq/contracts and runs
-# from there, so this repo holds no copy of it.
-
+name: ci
 on:
-  # A change is checked once, on its pull request, Renovate's included. A push
-  # runs the checks only on the default branch.
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
-  pull_request:
-
-permissions:
-  contents: read
-
-# A newer push to the branch, or a newer commit of the pull request, cancels the
-# run it supersedes.
+  schedule:
+    - cron: '41 6 * * *'
+permissions: {}
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  group: ci-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
-  same-tree:
-    # Reuses the result of an earlier run on the same tree; every job below
-    # needs it.
-    name: same tree (ci)
-    runs-on: ubuntu-26.04
+  ci:
+    uses: catenahq/contracts/.github/workflows/pr.yml@ede5b1277e10a673fd5ff7791e4abfd20dbd3738 # main
     permissions:
       contents: read
       actions: read
-    outputs:
-      run: ${{ steps.tree.outputs.run }}
-    steps:
-      - id: tree
-        uses: catenahq/contracts/.github/actions/same-tree@main
-        with:
-          siblings: catenahq/contracts
-
-  repo-rules:
-    name: Repo rules
-    needs: same-tree
-    if: needs.same-tree.outputs.run != 'false'
-    runs-on: ubuntu-26.04
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-        with:
-          path: renovate-config
-          persist-credentials: false
-      - name: Check out sibling contracts
-        uses: catenahq/contracts/.github/actions/checkout-sibling@main
-        with:
-          repository: catenahq/contracts
-          path: contracts
-          lock: renovate-config/.github/catenahq.lock
-      - name: Repo rules (no tracked env file; .gitignore carries the env rule)
-        working-directory: ./renovate-config
-        run: node ../contracts/scripts/check-repo-rules.mjs
-
-  validate-presets:
-    name: Validate presets
-    needs: same-tree
-    if: needs.same-tree.outputs.run != 'false'
-    runs-on: ubuntu-26.04
-    env:
-      # renovate: datasource=npm depName=renovate
-      RENOVATE_VERSION: 44.115.9
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
-        with:
-          node-version: "24"
-      - name: Validate every preset with renovate-config-validator --strict
-        run: npx --yes -p "renovate@${RENOVATE_VERSION}" renovate-config-validator --strict default.json
+      pull-requests: write
+      security-events: write
+      issues: write
+    with:
+      runner: ubuntu-26.04

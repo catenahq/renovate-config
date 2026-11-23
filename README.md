@@ -22,10 +22,11 @@ resolve it cleanly and the policy stays transparent. The self-hosted Renovate
 self-consumes this preset; run timing (every 4 hours) is owned by that runner's
 cron.
 
-CI runs Renovate's own `renovate-config-validator --strict` (pinned renovate
-version, bumped by Renovate itself) on every preset file in the repo, currently
-`default.json`. It fails on unknown options, mistyped values and invalid
-`packageRules`. A new preset file must be added to that step's file list.
+Pull requests run the shared PR workflow of catenahq/contracts (`.github/workflows/ci.yml`,
+checks in `.github/checks.yml`). Its `presets` check, `bash ci/run presets`, runs Renovate's
+own `renovate-config-validator --strict` (renovate version pinned in `ci/run`) on every preset
+file in the repo, currently `default.json`. It fails on unknown options, mistyped values and
+invalid `packageRules`. A new preset file must be added to the command in `ci/run`.
 
 Resolution chain:
 
