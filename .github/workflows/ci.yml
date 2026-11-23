@@ -2,6 +2,8 @@ name: ci
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
   schedule:
     - cron: '41 6 * * *'
 permissions: {}
@@ -10,11 +12,10 @@ concurrency:
   cancel-in-progress: true
 jobs:
   ci:
-    uses: catenahq/contracts/.github/workflows/pr.yml@1ce3a8a97781787c72f8f6d846ced10bcfbf8c76 # main
+    uses: catenahq/contracts/.github/workflows/pr.yml@ede5b1277e10a673fd5ff7791e4abfd20dbd3738 # main
     permissions:
       contents: read
       actions: read
-      statuses: write
       pull-requests: write
       security-events: write
       issues: write
